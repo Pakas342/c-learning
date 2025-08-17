@@ -29,7 +29,6 @@
 *.dylib
 
 # Executables
-executable/
 executables/
 *.exe
 *.out
@@ -55,3 +54,7 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Claude Code
+.claude/
+CLAUDE.md
