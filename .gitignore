@@ -30,6 +30,7 @@
 
 # Executables
 executable/
+executables/
 *.exe
 *.out
 *.app
