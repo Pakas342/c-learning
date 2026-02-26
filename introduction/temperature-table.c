@@ -23,7 +23,7 @@ int main() {
     celsius = 5.0 * (fahr - 32.0) / 9.0;
     /* adding 6.1f means a fractional number with 1 decimal point and 6 char
      * spaces, if you want, you could set 3d, which means decimal integer with 3
-     * spaces. You can not set the width and just do %.1f or %d for ex*/
+     * spaces. You can only set the decimals and not the w %.1f or %d for ex*/
     printf("%3.0f%6.1f\n", fahr, celsius);
     fahr += step;
   }
