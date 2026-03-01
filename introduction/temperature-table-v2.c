@@ -18,6 +18,9 @@ int main() {
     /* this is the classic version of the print, which only says, print a float,
      * tab, print a another float printf("%f\t%f\n", far, cel);
      *
+     * This is the print integer ver (less precise) printf("%d\t%d\n", far,
+     * cel);
+     *
      * We can make it better
      * This one stablishes the space the output will take
      * printf("%3f\t%6f\n", far, cel); */
