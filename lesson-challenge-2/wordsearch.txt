@@ -1,0 +1,15 @@
+The quick brown fox jumps over the lazy dog
+Hello world
+This line contains nothing special
+fox and hound are friends
+Programming in C is rewarding
+Never underestimate a quick fox
+the FOX is uppercase here
+foxes are not the same as fox
+Short
+A line with fox at the end: fox
+banana apple cherry
+Another boring line
+fox
+  fox with leading spaces
+testing testing 123
