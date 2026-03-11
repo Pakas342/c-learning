@@ -34,3 +34,7 @@ int recursive_comparison(char *a, char *b, int len, int i) {
         return recursive_comparison(a, b, len, i + 1);
     }
 }
+
+// There's a simpler version. strcmp() is a function that compares string and
+// prints if they are equal. however my solution is better because I came up
+// with it, which makes me cooler
