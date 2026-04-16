@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 struct ship {
@@ -24,9 +23,26 @@ int distance_predicate(struct ship *ship, int distance) {
         return 1;
 }
 
-struct ship *filter_ships(struct ship *head, int (predicate)(struct ship*, int)) {
-    // TODO
-    return // todo ;
+struct ship *filter_ships(struct ship *head, int(predicate)(struct ship *, int),
+                          int predicate_arg) {
+    struct ship *current_ship = head;
+    struct ship *prev = NULL;
+    struct ship *current_head = head;
+    while (current_ship) {
+        if (!predicate(current_ship, predicate_arg)) {
+            if (prev) {
+                prev->next = current_ship->next;
+            } else {
+                current_head= current_ship->next;
+                current_ship = current_ship->next;
+                continue;
+            }
+        }
+        prev = current_ship;
+        current_ship = current_ship->next;
+    }
+
+    return  current_head;
 }
 
 void print_ships(struct ship *head) {
@@ -45,11 +61,11 @@ int main(void) {
     struct ship *fleet = &s4;
 
     // filter out ships that have less than 50 fuel
-    fleet = filter_ships(/*todo*/);
+    fleet = filter_ships(fleet, &fuel_predicate, 50);
     print_ships(fleet);
 
     // filter out ships that are less than 100 distance
-    fleet = filter_ships(/*todo*/);
+    fleet = filter_ships(fleet, &distance_predicate, 100);
     print_ships(fleet);
 
     return 0;
