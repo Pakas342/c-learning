@@ -14,17 +14,15 @@
  * DIV - Divide
  */
 
-enum FUNC {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-};
-
 typedef int (*math_fn_t)(int, int);
 
-struct instruction {
+struct func_map {
+    char name[DEF_STR_BUF];
     math_fn_t fn;
+};
+
+struct instruction {
+    char fn[DEF_STR_BUF];
     char arg1[DEF_STR_BUF];
     char arg2[DEF_STR_BUF];
 };
@@ -39,18 +37,16 @@ int sub(int a, int b) { return (a - b); }
 int mul(int a, int b) { return (a * b); }
 int divi(int a, int b) { return (a / b); }
 
-math_fn_t a = add;
-math_fn_t b = sub;
-math_fn_t c = mul;
-math_fn_t d = divi;
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         char message[] = "No file of instructions given\n";
         write(STDOUT_FILENO, message, sizeof(message));
         exit(0);
     }
-    math_fn_t functions[] = {a, b, c, d};
+    struct func_map functions[] = {{.name = "ADD", .fn = add},
+                                   {.name = "SUB", .fn = sub},
+                                   {.name = "MUL", .fn = mul},
+                                   {.name = "DIV", .fn = divi}};
     int fd = open(argv[1], O_RDONLY);
     off_t file_len = lseek(fd, 0, SEEK_END);
     lseek(fd, 0, SEEK_SET);
@@ -78,25 +74,15 @@ int main(int argc, char *argv[]) {
     }
 
     unsigned prev = 0;
-    struct instruction *prev_int = NULL;
     for (int i = 0; i < instructions; i++) {
         unsigned next = lines_index[i].line_index;
         char instruct_buf[DEF_STR_BUF];
         strncpy(instruct_buf, file_buf + prev, (next - prev));
-        instruct_buf[next-prev] = '\0';
+        instruct_buf[next - prev] = '\0';
         char ins[DEF_STR_BUF];
         char arg1[DEF_STR_BUF];
         char arg2[DEF_STR_BUF];
         sscanf(instruct_buf, "%s %s %s", ins, arg1, arg2);
-        enum FUNC func;
-        if (strcmp(ins, "ADD") == 0)
-            func = ADD;
-        if (strcmp(ins, "SUB") == 0)
-            func = SUB;
-        if (strcmp(ins, "MUL") == 0)
-            func = MUL;
-        if (strcmp(ins, "DIV") == 0)
-            func = DIV;
 
         struct instruction *cur_instruction;
         cur_instruction = malloc(sizeof(struct instruction));
@@ -104,13 +90,12 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        *cur_instruction = (struct instruction){.fn = functions[func]};
         strcpy(cur_instruction->arg1, arg1);
         strcpy(cur_instruction->arg2, arg2);
+        strcpy(cur_instruction->fn, ins);
         lines_index[i].instruction = cur_instruction;
-        prev = next;
+        prev = next + 1;
     }
-    close(fd);
     free(file_buf);
 
     int prev_value = 0;
@@ -130,7 +115,11 @@ int main(int argc, char *argv[]) {
             arg2 = atoi(cur_ins->arg2);
         }
 
-        prev_value = cur_ins->fn(arg1, arg2);
+        for (int j = 0; j < 4; j++) {
+            if (strcmp(functions[j].name, cur_ins->fn) == 0) {
+                prev_value = functions[j].fn(arg1, arg2);
+            }
+        }
         free(cur_ins);
     }
 
