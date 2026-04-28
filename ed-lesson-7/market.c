@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
         char phone_label[] = "phone: ";
         get_input(phone, phone_label, sizeof(phone_label), true);
 
-        // I'm getting not allowing a safe exit on purchase lines as that might
+        // I'm not allowing a safe exit on purchase lines as that might
         // require me to dealloc in the middle of a transaction.
         struct purchase *client_purchase = NULL;
         Malloc(sizeof(struct purchase), (void **)&client_purchase);
