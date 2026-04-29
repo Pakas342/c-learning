@@ -14,6 +14,8 @@ int main(int argc, char *argv[]) {
 
     for (int i = 2; i < argc; i++) {
         char command[200] = {0};
+        // ANOTHER VERSION IS USING the strstr function, that searchs a str in
+        // another one
         strcpy(command, "grep ");
         strcat(command, argv[1]);
         strcat(command, " ");

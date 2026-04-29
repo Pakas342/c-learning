@@ -36,8 +36,8 @@ void sig_handler(int signo, siginfo_t *sigino, void *context) {
 
 int main() {
     struct sigaction sig;
-    // setting to 0 the memory space in sigaction. sa,me can be achieved with =
-    // {0}
+    // setting to 0 the memory space in sigaction.
+    // same can be achieved with = {0}
     memset(&sig, 0, sizeof(struct sigaction));
 
     sig.sa_sigaction = sig_handler;
