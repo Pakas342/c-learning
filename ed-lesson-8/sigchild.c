@@ -37,15 +37,17 @@ static void handler(int sig, siginfo_t *info, void *uctx) {
     // means we might lose some signals if they arrive while the handler is
     // handling. A more robust approach is to waitpid with -1 (which means any
     // terminated) and give a non blocking flag so the wait returns right away
-    // if no kid has terminated.
-    // Another reason for the prev over, say, allowing the handler to get call
-    // by the same signal while executing (there's a flag for that) is that even
-    // if you allow that, if two concurrent child end at the same time, you
-    // still lost one of them as the pending signal is just a bit alert, so if
-    // two things turn it of super close to each other, we'll only handle one
-    // assuming it was only one who turned it on. That's way is better to think
-    // about the sigchild as "At least one child finished" and not as a "one
-    // child finished"
+    // if no kid has terminated. That way we get to wait all kids that finished
+    // since the signal was received and the handler finishes
+    // 
+    // killed, and thus we finished Another reason for the prev over, say,
+    // allowing the handler to get call by the same signal while executing
+    // (there's a flag for that) is that even if you allow that, if two
+    // concurrent child end at the same time, you still lost one of them as the
+    // pending signal is just a bit alert, so if two things turn it of super
+    // close to each other, we'll only handle one assuming it was only one who
+    // turned it on. That's way is better to think about the sigchild as "At
+    // least one child finished" and not as a "one child finished"
 }
 
 int main(void) {
