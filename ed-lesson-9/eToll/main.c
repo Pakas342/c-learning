@@ -1,13 +1,12 @@
+#include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <string.h>
 #include <sys/epoll.h>
 #include <sys/stat.h>
-#include <errno.h>
-#include <string.h>
-#include <signal.h>
 #include <time.h>
+#include <unistd.h>
 
 #define MAX_EVENTS 16
 #define BUF_SIZE 1024
@@ -42,8 +41,7 @@ void car_generator(const char *fifo_name, int id) {
         int amount = (rand() % 20) + 1;
 
         char msg[64];
-        int len = snprintf(msg, sizeof(msg),
-                           "CAR-%d:%d\n", car_id, amount);
+        int len = snprintf(msg, sizeof(msg), "CAR-%d:%d\n", car_id, amount);
 
         write(fd, msg, len);
 
@@ -53,14 +51,12 @@ void car_generator(const char *fifo_name, int id) {
     }
 }
 
-
 /* ---------------- Line Processing ---------------- */
 void process_lines(lane_t *lane) {
     char *start = lane->buf;
     char *newline;
 
-    while ((newline = memchr(start, '\n',
-           lane->len - (start - lane->buf)))) {
+    while ((newline = memchr(start, '\n', lane->len - (start - lane->buf)))) {
 
         *newline = '\0';
 
@@ -68,11 +64,9 @@ void process_lines(lane_t *lane) {
         int amount;
 
         if (sscanf(start, "%63[^:]:%d", car, &amount) == 2) {
-            printf("[LANE %d] Car %s paid %d\n",
-                   lane->lane_id, car, amount);
+            printf("[LANE %d] Car %s paid %d\n", lane->lane_id, car, amount);
         } else {
-            printf("[LANE %d] Invalid: %s\n",
-                   lane->lane_id, start);
+            printf("[LANE %d] Invalid: %s\n", lane->lane_id, start);
         }
 
         start = newline + 1;
@@ -82,7 +76,6 @@ void process_lines(lane_t *lane) {
     memmove(lane->buf, start, remaining);
     lane->len = remaining;
 }
-
 
 /* ---------------- Main ---------------- */
 int main() {
@@ -94,29 +87,70 @@ int main() {
 
     lane_t lanes[MAX_LANES];
 
+    struct epoll_event eve;
+    eve.events = EPOLLIN;
+
     /* ---------- Create FIFOs + open readers ---------- */
     for (int i = 0; i < MAX_LANES; i++) {
-        lanes[0].lane_id = i;
-        //TODO
+        char fifo_name[10] = {0};
+        sprintf(fifo_name, "fifo_%d", i);
+        // octal number of 3 digist. 6 = 110 aka RW no execute (x)
+        mode_t mode = 0666;
+        mkfifo(fifo_name, mode);
 
+        // This is important! without it, if epoll triggers, and something reads
+        // before me, then I'm stuck :(
+        int fd = open(fifo_name, O_RDONLY | O_NONBLOCK);
+        if (fd == -1) {
+            perror("open reader");
+            exit(1);
+        }
+
+        lanes[i] = (lane_t){
+            .fd = fd,
+            .lane_id = i,
+            .buf = {0},
+        };
+
+        eve.data.ptr = lanes + i;
+        epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &eve);
     }
 
     // Forks N car generator processes
 
     /* ---------- Fork car generators ---------- */
     for (int i = 0; i < MAX_LANES; i++) {
-        //TODO
+        lane_t lane = lanes[i];
+        char fifo_name[10] = {0};
+        sprintf(fifo_name, "fifo_%d", lane.lane_id);
+        pid_t pid = fork();
+        if (pid < 0) {
+            exit(-1);
+        } else if (pid == 0) {
+            // child
+            car_generator(fifo_name, i);
+            exit(-1); // this should never be reached as while (1) on car gen
+        }
     }
 
     struct epoll_event events[MAX_EVENTS];
 
-    printf("Toll booth running with %d lanes...\n", MAX_LANES);
-
     /* ---------- Event loop ---------- */
     while (1) {
-        //TODO
+        int n = epoll_wait(epfd, events, MAX_EVENTS, -1);
+        if (n == -1) {
+            perror("epoll_wait");
+            exit(EXIT_FAILURE);
+        }
+        for (int i = 0; i < n; i++) {
+            lane_t *lane = (lane_t *)events[i].data.ptr;
+            lane->len += read(lane->fd, lane->buf, BUF_SIZE);
+            process_lines(lane);
+        }
     }
 
+    // I should wait for all my car children, wait for all my processing lines
+    // children, close all the file descriptors, do a bunch of stuff, but nah
     close(epfd);
     return 0;
 }
